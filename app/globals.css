@@ -19,8 +19,62 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
 }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(1200px 700px at 20% 10%, rgba(255,0,170,.28), transparent 55%),
+    radial-gradient(900px 600px at 80% 40%, rgba(0,255,255,.20), transparent 60%),
+    radial-gradient(1000px 700px at 50% 90%, rgba(140,0,255,.22), transparent 60%),
+    linear-gradient(180deg, #07060a 0%, #05040a 100%);
+  overflow-x: hidden;
+}
+
+/* floaty card */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+.neon-float { animation: floaty 3.5s ease-in-out infinite; }
+
+/* glow pulse (para “botón siguiente” o estado activo) */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.06),
+      0 0 28px rgba(232,121,249,.22),
+      0 0 44px rgba(34,211,238,.18);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.10),
+      0 0 40px rgba(232,121,249,.30),
+      0 0 64px rgba(34,211,238,.22);
+    transform: translateY(-1px);
+  }
+}
+.pulse-glow { animation: glowPulse 1.6s ease-in-out infinite; }
+
+/* micro “tap” feedback */
+.tap {
+  transition: transform 120ms ease, filter 120ms ease;
+}
+.tap:active { transform: scale(.985); filter: brightness(1.06); }
+
+/* card reveal animation */
+@keyframes popIn {
+  from { transform: translateY(10px) scale(.98); opacity: .0; }
+  to   { transform: translateY(0px) scale(1); opacity: 1; }
+}
+.pop-in { animation: popIn 220ms ease-out both; }
