@@ -337,7 +337,7 @@ function Home({ onStart }: { onStart: () => void }) {
     <div className="space-y-5">
       <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-fuchsia-500/18 via-cyan-400/10 to-purple-500/16 p-6">
         <p className="text-lg font-semibold text-white/85 sm:text-xl">
-          Turnos rápidos. Cartas que se sienten como juego.
+          El juego de verdad o reto más fluido y épico que jamás hayas jugado. Sin reglas complicadas, sin distracciones, solo puro sexo
         </p>
       </div>
 
@@ -349,7 +349,7 @@ function Home({ onStart }: { onStart: () => void }) {
       </button>
 
       <div className="grid grid-cols-2 gap-3">
-        <Tag text="Flip épico" />
+        <Tag text="Divertdo" />
         <Tag text="Swipe" />
         <Tag text="Neón" />
         <Tag text="Rápido" />
