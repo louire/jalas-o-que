@@ -128,3 +128,9 @@ body{
 }
 .nudge-left { animation: nudgeLeft 1.2s ease-in-out infinite; }
 .nudge-right { animation: nudgeRight 1.2s ease-in-out infinite; }
+
+.swipe-zone {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}

@@ -443,10 +443,10 @@ function Players(props: {
 function Game(props: {
   round: number;
   currentPlayer: string;
-  phase: Phase;
-  choice: PromptType | null;
+  phase: "choose" | "reveal";
+  choice: "truth" | "dare" | null;
   currentPrompt: PromptItem | null;
-  onChoose: (t: PromptType) => void;
+  onChoose: (t: "truth" | "dare") => void;
   onNextTurn: () => void;
   onChangePrompt: () => void;
   showPenalty: boolean;
@@ -465,7 +465,7 @@ function Game(props: {
     setShowPenalty,
   } = props;
 
-  // Swipe state (for choose card)
+  // Swipe state
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startX = useRef<number | null>(null);
@@ -476,7 +476,6 @@ function Game(props: {
   const swipeThreshold = 90;
 
   function spawnNeonConfetti() {
-    // lightweight: 26 pieces
     const pieces = Array.from({ length: 26 }).map((_, i) => ({
       id: `${Date.now()}_${i}`,
       x: Math.random() * 100,
@@ -487,9 +486,35 @@ function Game(props: {
     setTimeout(() => setConfetti([]), 1200);
   }
 
+  function nextWithConfetti() {
+    spawnNeonConfetti();
+    onNextTurn();
+  }
+
+  function settleSwipe(currentDx: number) {
+    if (phase !== "choose") return;
+
+    if (currentDx > swipeThreshold) {
+      setDragging(false);
+      setDx(0);
+      onChoose("dare"); // derecha = RETO
+      return;
+    }
+    if (currentDx < -swipeThreshold) {
+      setDragging(false);
+      setDx(0);
+      onChoose("truth"); // izquierda = VERDAD
+      return;
+    }
+
+    // Snap back
+    setDragging(false);
+    setDx(0);
+  }
+
+  // -------- Pointer (PC / Android Chrome) --------
   function handlePointerDown(e: React.PointerEvent) {
     if (phase !== "choose") return;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     startX.current = e.clientX;
     setDragging(true);
   }
@@ -500,36 +525,34 @@ function Game(props: {
     setDx(delta);
   }
 
-  function settleSwipe() {
-    if (phase !== "choose") return;
-
-    if (dx > swipeThreshold) {
-      // Right = DARE
-      setDragging(false);
-      setDx(0);
-      onChoose("dare");
-      return;
-    }
-    if (dx < -swipeThreshold) {
-      // Left = TRUTH
-      setDragging(false);
-      setDx(0);
-      onChoose("truth");
-      return;
-    }
-
-    // snap back
-    setDragging(false);
-    setDx(0);
-  }
-
   function handlePointerUp() {
-    settleSwipe();
+    settleSwipe(dx);
   }
 
-  function nextWithConfetti() {
-    spawnNeonConfetti();
-    onNextTurn();
+  // -------- Touch fallback (iOS Safari) --------
+  function handleTouchStart(e: React.TouchEvent) {
+    if (phase !== "choose") return;
+    const t = e.touches[0];
+    if (!t) return;
+    startX.current = t.clientX;
+    setDragging(true);
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!dragging || startX.current == null) return;
+
+    const t = e.touches[0];
+    if (!t) return;
+
+    const delta = t.clientX - startX.current;
+    setDx(delta);
+
+    // Evita que Safari se robe el gesto si ya es swipe horizontal
+    if (Math.abs(delta) > 6) e.preventDefault();
+  }
+
+  function handleTouchEnd() {
+    settleSwipe(dx);
   }
 
   const rotate = Math.max(-10, Math.min(10, dx / 18));
@@ -551,10 +574,7 @@ function Game(props: {
                 transform: `translateY(-10px)`,
                 animation: `confettiFall 1.05s ease-in forwards`,
                 animationDelay: `${p.delay}s`,
-                background:
-                  Math.random() > 0.5
-                    ? "rgba(232,121,249,.85)"
-                    : "rgba(34,211,238,.85)",
+                background: Math.random() > 0.5 ? "rgba(232,121,249,.85)" : "rgba(34,211,238,.85)",
                 boxShadow:
                   Math.random() > 0.5
                     ? "0 0 18px rgba(232,121,249,.45)"
@@ -564,8 +584,14 @@ function Game(props: {
           ))}
           <style jsx>{`
             @keyframes confettiFall {
-              0% { transform: translateY(-10px) translateX(0); opacity: 1; }
-              100% { transform: translateY(520px) translateX(40px); opacity: 0; }
+              0% {
+                transform: translateY(-10px) translateX(0);
+                opacity: 1;
+              }
+              100% {
+                transform: translateY(520px) translateX(40px);
+                opacity: 0;
+              }
             }
           `}</style>
         </div>
@@ -596,11 +622,15 @@ function Game(props: {
       {phase === "choose" && (
         <div className="space-y-4">
           <div
-            className="flip-wrap"
+            className="flip-wrap swipe-zone"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
           >
             <div
               className="tap rounded-[34px] border border-white/10 bg-gradient-to-br from-white/[0.10] to-white/[0.04] p-6 shadow-[0_24px_80px_rgba(0,0,0,.45)]"
@@ -621,14 +651,11 @@ function Game(props: {
                 </div>
               </div>
 
-              <div className="mt-5 text-3xl font-extrabold sm:text-4xl">
-                Elige tu carta
-              </div>
+              <div className="mt-5 text-3xl font-extrabold sm:text-4xl">Elige tu carta</div>
               <div className="mt-2 text-base font-semibold text-white/70 sm:text-lg">
                 Arrastra o toca un botón abajo
               </div>
 
-              {/* Swipe hint glow */}
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <div className="rounded-[26px] border border-white/10 bg-fuchsia-500/14 p-4">
                   <div className="text-xl font-extrabold text-fuchsia-200">VERDAD</div>
@@ -640,12 +667,8 @@ function Game(props: {
                 </div>
               </div>
 
-              {/* live direction overlay */}
               <div className="mt-6 rounded-[26px] border border-white/10 bg-black/25 p-4 text-center">
-                <div
-                  className="text-base font-extrabold"
-                  style={{ opacity: opacityHint }}
-                >
+                <div className="text-base font-extrabold" style={{ opacity: opacityHint }}>
                   {dx < -20 ? "VERDAD" : dx > 20 ? "RETO" : "…"}
                 </div>
               </div>
@@ -674,15 +697,15 @@ function Game(props: {
       {phase === "reveal" && currentPrompt && (
         <div className="space-y-5">
           <div className="flip-wrap">
-            <div className={cn("flip is-flipped")}>
-              {/* Front face (just style) */}
+            <div className="flip is-flipped">
+              {/* Front face (fake front) */}
               <div className="flip-face">
                 <div className="rounded-[34px] border border-white/10 bg-gradient-to-br from-white/[0.10] to-white/[0.04] p-6 shadow-[0_24px_80px_rgba(0,0,0,.45)]">
                   <div className="text-2xl font-extrabold">Cargando carta…</div>
                 </div>
               </div>
 
-              {/* Back face (actual content) */}
+              {/* Back face (content) */}
               <div className="flip-face flip-back">
                 <div className="pop-in relative overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-white/[0.12] to-white/[0.05] p-6 shadow-[0_24px_80px_rgba(0,0,0,.45)]">
                   <div
