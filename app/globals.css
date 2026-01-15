@@ -18,63 +18,113 @@
     --foreground: #ededed;
   }
 }
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-}
+:root { color-scheme: dark; }
+html, body { height: 100%; }
 
-html, body {
-  height: 100%;
-}
-
-body {
+body{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(255,0,170,.28), transparent 55%),
-    radial-gradient(900px 600px at 80% 40%, rgba(0,255,255,.20), transparent 60%),
-    radial-gradient(1000px 700px at 50% 90%, rgba(140,0,255,.22), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(255,0,170,.30), transparent 55%),
+    radial-gradient(900px 600px at 80% 40%, rgba(0,255,255,.22), transparent 60%),
+    radial-gradient(1000px 700px at 50% 90%, rgba(140,0,255,.24), transparent 60%),
     linear-gradient(180deg, #07060a 0%, #05040a 100%);
   overflow-x: hidden;
 }
 
-/* floaty card */
 @keyframes floaty {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-6px); }
 }
 .neon-float { animation: floaty 3.5s ease-in-out infinite; }
 
-/* glow pulse (para “botón siguiente” o estado activo) */
+@keyframes popIn {
+  from { transform: translateY(12px) scale(.985); opacity: 0; }
+  to { transform: translateY(0px) scale(1); opacity: 1; }
+}
+.pop-in { animation: popIn 240ms ease-out both; }
+
 @keyframes glowPulse {
   0%, 100% {
     box-shadow:
       0 0 0 1px rgba(255,255,255,.06),
-      0 0 28px rgba(232,121,249,.22),
-      0 0 44px rgba(34,211,238,.18);
+      0 0 36px rgba(232,121,249,.26),
+      0 0 64px rgba(34,211,238,.20);
     transform: translateY(0);
   }
   50% {
     box-shadow:
       0 0 0 1px rgba(255,255,255,.10),
-      0 0 40px rgba(232,121,249,.30),
-      0 0 64px rgba(34,211,238,.22);
+      0 0 54px rgba(232,121,249,.34),
+      0 0 90px rgba(34,211,238,.26);
     transform: translateY(-1px);
   }
 }
-.pulse-glow { animation: glowPulse 1.6s ease-in-out infinite; }
+.pulse-glow { animation: glowPulse 1.55s ease-in-out infinite; }
 
-/* micro “tap” feedback */
-.tap {
-  transition: transform 120ms ease, filter 120ms ease;
-}
+.tap { transition: transform 120ms ease, filter 120ms ease; }
 .tap:active { transform: scale(.985); filter: brightness(1.06); }
 
-/* card reveal animation */
-@keyframes popIn {
-  from { transform: translateY(10px) scale(.98); opacity: .0; }
-  to   { transform: translateY(0px) scale(1); opacity: 1; }
+@keyframes wave {
+  0%   { transform: scaleY(.25); opacity: .35; }
+  50%  { transform: scaleY(1.0); opacity: .95; }
+  100% { transform: scaleY(.35); opacity: .45; }
 }
-.pop-in { animation: popIn 220ms ease-out both; }
+
+.wavebar {
+  transform-origin: bottom;
+  animation: wave 900ms ease-in-out infinite;
+  border-radius: 999px;
+}
+
+.wavebar:nth-child(1)  { animation-delay: -120ms; }
+.wavebar:nth-child(2)  { animation-delay: -360ms; }
+.wavebar:nth-child(3)  { animation-delay: -540ms; }
+.wavebar:nth-child(4)  { animation-delay: -240ms; }
+.wavebar:nth-child(5)  { animation-delay: -660ms; }
+.wavebar:nth-child(6)  { animation-delay: -420ms; }
+.wavebar:nth-child(7)  { animation-delay: -180ms; }
+.wavebar:nth-child(8)  { animation-delay: -600ms; }
+.wavebar:nth-child(9)  { animation-delay: -300ms; }
+.wavebar:nth-child(10) { animation-delay: -510ms; }
+
+.noise {
+  background-image:
+    radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: radial-gradient(500px 260px at 50% 100%, black 40%, transparent 80%);
+  opacity: .20;
+}
+/* --- Card flip --- */
+.flip-wrap {
+  perspective: 1200px;
+}
+.flip {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(.2,.85,.2,1);
+}
+.flip.is-flipped {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+/* --- Swipe affordance --- */
+@keyframes nudgeLeft {
+  0%,100% { transform: translateX(0); }
+  50% { transform: translateX(-6px); }
+}
+@keyframes nudgeRight {
+  0%,100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}
+.nudge-left { animation: nudgeLeft 1.2s ease-in-out infinite; }
+.nudge-right { animation: nudgeRight 1.2s ease-in-out infinite; }
